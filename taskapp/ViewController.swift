@@ -15,26 +15,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         tableView.fillerRowHeight = UITableView.automaticDimension
-        tableView.delegate = self
+        tableView.delegate = self//デリゲート先＝self（ViewController）を指定。UITableViewDelegateの継承が必要
         tableView.dataSource = self
-        categoryTextField.delegate = self
+        categoryTextField.delegate = self//テキストフィールド上のイベントをselfに通知
         
     }
-    // データの数（＝セルの数）を返すメソッド
+    // データの数（＝セルの数）を返すデリゲートメソッド
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
         return taskArray.count
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool{
-            print("textFieldShouldReturn \(categoryTextField.text!)")
-            var taskQuery = try! Realm().objects(Task.self).where({ $0.category == "\(categoryTextField.text!)"})
-            print(taskQuery)
-        
-        // 改行ボタンが押されたらKeyboardを閉じる処理.
-            textField.resignFirstResponder()
-            return true
-        }
-    // 各セルの内容を返すメソッド
+    // 各セルの内容を返すデリゲートメソッド
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // 再利用可能な cell を得る
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
@@ -90,6 +81,18 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }
     }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool{
+        //改行が行われたら実行。taskArrayをテキストフィールドに入力された値で絞込み
+        taskArray = try! Realm().objects(Task.self).where({ $0.category == "\(categoryTextField.text!)"})
+        //tableViewをリロードして絞込みしたtaskArrayで再度tableViewデリゲートを読み出す
+        tableView.reloadData()
+        
+        // 改行ボタンが押されたらKeyboardを閉じる処理.
+        textField.resignFirstResponder()
+        return true
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         let inputViewController:InputViewController = segue.destination as! InputViewController
         
